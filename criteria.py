@@ -77,30 +77,79 @@ def render(a):
              +Fore.CYAN+'|')
     print('\--------------------------------------------------------------/')
 
-def plot(a):
-    # /*------------------------------------------------
-    # | exclude non dominant points
-    # ------------------------------------------------*/
+def _remove_non_dominant(a):
     for i in range(1, len(a)+1):
         # {1: [2, 3, '+', '\x1b[31m   -    \x1b[39m', '+', '+'], 2: [1, 2, '\x1b[31m   -    \x1b[39m', '+', '+', '+']}
         if (a[i][2] != '+' and a[i][3] != '+' and a[i][4] != '+' and a[i][5] != '+'):
             del a[i];
+    return a
 
-    # /*------------------------------------------------
-    # | RENDER PLOT
-    # ------------------------------------------------*/
-    b = a.values()
-    x = [i[0] for i in b]
-    y = [i[1] for i in b]
+def _remove_not_unique(a):
+    b = list(a.values())
+    unique = []
+    [unique.append(item) for item in b if item not in unique]
+    return unique
 
-    pylab.plot(x, y, 'bs-')
-    for i in range(0,len(b)):
-        pylab.annotate('F(x{0})'.format(i+1), xy=(x[i], y[i]), xytext=(x[i]+.2, y[i]+.2))
+def ___distance(x1, y1, x2, y2):
+    return ((x2-x1)**2 + (y2-y1)**2)**.5
 
-    pylab.xticks(range(min(x)-1, max(x)+2))
-    pylab.yticks(range(min(y)-1, max(y)+2))
+def __draw_quantile(graph):
+    to_draw = []
+
+    print('graph---')
+    print(graph)
+    closest = [999999999, graph[0][0], graph[0][1]]
+
+    for i in range(0, len(graph)):
+        if (len(graph) > 1): # 3
+            x = [i[0] for i in graph] # [2,3,0]
+            y = [i[1] for i in graph] # [3,1,2]
+            for i in range(0, len(graph)-1):
+                dist = ___distance(closest[1], closest[2], x[i+1], y[i+1]) # 5**.5
+                print(dist)
+                if (dist < closest[0]):
+                    closest[0] = dist # 5**.5
+                    closest[1] = x[i+1] # 3
+                    closest[2] = y[i+1] # 1
+            to_draw.append(closest)
+            del graph[0];
+
+    y = [i[2] for i in to_draw] 
+    x = [i[1] for i in to_draw]
+    print('----====')
+    print(to_draw)
+    print('====----')
+    pylab.plot(x, y, '-')
+    print('end quantile')
+
+def _add_points_and_annotate(unique):
+    x_all = [i[0] for i in unique]
+    y_all = [i[1] for i in unique]
+    pylab.plot(x_all, y_all, 'bs')
+    for i in range(0,len(unique)):
+        pylab.annotate('F(x{0})'.format(i+1), xy=(x_all[i], y_all[i]), xytext=(x_all[i]+.2, y_all[i]+.2))
+
+def _add_lines(unique):
+    for j in range(2, 6):
+        graph = []
+        for i in range(0, len(unique)):
+            if (unique[i][j] == '+'):
+                graph.append([unique[i][0], unique[i][1]])
+        __draw_quantile(graph)
+
+def _add_ticks(unique):
+    x_all = [i[0] for i in unique]
+    y_all = [i[1] for i in unique]
+    pylab.xticks(range(min(x_all)-1, max(x_all)+2))
+    pylab.yticks(range(min(y_all)-1, max(y_all)+2))
+
+def plot(a):
+    a = _remove_non_dominant(a)
+    unique = _remove_not_unique(a)
+    _add_points_and_annotate(unique)
+    _add_lines(unique)
+    _add_ticks(unique)
     pylab.show()
-
 
 # /*------------------------------------------------
 # | RUN

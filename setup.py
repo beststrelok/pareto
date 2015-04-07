@@ -1,8 +1,7 @@
 from distutils.core import setup
 import py2exe
 
-setup(
-	options = {
+setup(options = {
 		"py2exe": {
 	# 		# "compressed": 2, 
 	# 		# "optimize": 2,
